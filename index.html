@@ -1,0 +1,1660 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Galería privada</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            padding: 30px 0;
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        /* =========================
+           CONTRASEÑA
+        ========================= */
+
+        #pantallaPassword {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+
+            background: #111;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        #cajaPassword {
+            width: 100%;
+            max-width: 400px;
+
+            background: #1d1d1d;
+            padding: 35px;
+
+            border-radius: 18px;
+
+            text-align: center;
+
+            box-shadow: 0 10px 40px rgba(0,0,0,.5);
+        }
+
+        #cajaPassword h1 {
+            margin-top: 0;
+        }
+
+        #cajaPassword p {
+            color: #aaa;
+        }
+
+        #passwordInput {
+            width: 100%;
+
+            padding: 14px;
+
+            margin-top: 15px;
+
+            border: 1px solid #444;
+            border-radius: 10px;
+
+            background: #111;
+            color: white;
+
+            font-size: 16px;
+
+            outline: none;
+        }
+
+        #botonEntrar {
+            width: 100%;
+
+            margin-top: 12px;
+
+            padding: 13px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: #444;
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        #botonEntrar:hover {
+            background: #666;
+        }
+
+        #errorPassword {
+            min-height: 20px;
+
+            margin-top: 12px;
+
+            color: #ff7070;
+        }
+
+
+        /* =========================
+           CONTENIDO
+        ========================= */
+
+        #contenido {
+            display: none;
+
+            flex-direction: column;
+            align-items: center;
+
+            width: 100%;
+        }
+
+        #contenido.visible {
+            display: flex;
+        }
+
+
+        /* =========================
+           MENÚ
+        ========================= */
+
+        #menu {
+            position: sticky;
+            top: 0;
+
+            z-index: 1000;
+
+            width: 100%;
+
+            padding: 15px;
+
+            background: rgba(20,20,20,.95);
+
+            display: flex;
+            justify-content: center;
+
+            gap: 10px;
+
+            backdrop-filter: blur(8px);
+        }
+
+        #menu button {
+            padding: 12px 22px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: #333;
+            color: white;
+
+            font-size: 16px;
+
+            cursor: pointer;
+        }
+
+        #menu button:hover {
+            background: #555;
+        }
+
+        #menu button.activo {
+            background: #666;
+        }
+
+
+        /* =========================
+           SECCIONES
+        ========================= */
+
+        .seccion {
+            width: 100%;
+            max-width: 1000px;
+
+            display: none;
+
+            flex-direction: column;
+            align-items: center;
+
+            gap: 25px;
+
+            padding: 30px 15px;
+        }
+
+        .seccion.activa {
+            display: flex;
+        }
+
+
+        /* =========================
+           TARJETAS
+        ========================= */
+
+        .elemento {
+            width: 100%;
+            max-width: 800px;
+
+            padding: 20px;
+
+            background: #1d1d1d;
+
+            border-radius: 15px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            gap: 12px;
+
+            box-shadow: 0 5px 20px rgba(0,0,0,.35);
+        }
+
+
+        /* =========================
+           FOTOS
+        ========================= */
+
+        .elemento img {
+            display: block;
+
+            /*
+             * SIN relación de aspecto fija.
+             * La imagen mantiene exactamente
+             * sus proporciones originales.
+             */
+
+            width: auto;
+            height: auto;
+
+            max-width: 100%;
+            max-height: 600px;
+
+            object-fit: contain;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+
+        /* =========================
+           VÍDEOS
+        ========================= */
+
+        .elemento video {
+            display: block;
+
+            width: auto;
+            height: auto;
+
+            max-width: 100%;
+            max-height: 600px;
+
+            border-radius: 10px;
+
+            background: black;
+        }
+
+
+        .informacion {
+            color: #aaa;
+            font-size: 14px;
+
+            text-align: center;
+        }
+
+
+        .boton-descarga {
+            padding: 10px 18px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #444;
+            color: white;
+
+            cursor: pointer;
+        }
+
+        .boton-descarga:hover {
+            background: #666;
+        }
+
+
+        /* =========================
+           VISOR
+        ========================= */
+
+        #visor {
+            position: fixed;
+            inset: 0;
+
+            z-index: 5000;
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+
+            background: rgba(0,0,0,.96);
+
+            touch-action: none;
+        }
+
+        #visor.activo {
+            display: flex;
+        }
+
+        #imagenVisor {
+            position: absolute;
+
+            max-width: 90vw;
+            max-height: 90vh;
+
+            width: auto;
+            height: auto;
+
+            object-fit: contain;
+
+            user-select: none;
+            -webkit-user-drag: none;
+
+            cursor: grab;
+
+            transform:
+                translate(0,0)
+                scale(1);
+
+            will-change: transform;
+        }
+
+        #imagenVisor.arrastrando {
+            cursor: grabbing;
+        }
+
+        #imagenVisor.animando {
+            transition:
+                transform .28s ease,
+                opacity .28s ease;
+        }
+
+
+        /* =========================
+           CERRAR
+        ========================= */
+
+        #cerrar {
+            position: absolute;
+
+            top: 20px;
+            right: 25px;
+
+            z-index: 20;
+
+            width: 45px;
+            height: 45px;
+
+            border: none;
+            border-radius: 50%;
+
+            background: rgba(255,255,255,.12);
+
+            color: white;
+
+            font-size: 25px;
+
+            cursor: pointer;
+        }
+
+        #cerrar:hover {
+            background: rgba(255,255,255,.25);
+        }
+
+
+        /* =========================
+           FLECHAS
+        ========================= */
+
+        .flecha {
+            position: absolute;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            z-index: 20;
+
+            width: 55px;
+            height: 80px;
+
+            border: none;
+            border-radius: 12px;
+
+            background: rgba(255,255,255,.10);
+
+            color: white;
+
+            font-size: 45px;
+
+            cursor: pointer;
+
+            user-select: none;
+        }
+
+        .flecha:hover {
+            background: rgba(255,255,255,.22);
+        }
+
+        #anterior {
+            left: 20px;
+        }
+
+        #siguiente {
+            right: 20px;
+        }
+
+
+        /* =========================
+           CONTADOR
+        ========================= */
+
+        #contador {
+            position: absolute;
+
+            top: 22px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 20;
+
+            padding: 8px 15px;
+
+            border-radius: 10px;
+
+            background: rgba(30,30,30,.8);
+
+            font-size: 14px;
+        }
+
+
+        /* =========================
+           ZOOM
+        ========================= */
+
+        #controles {
+            position: absolute;
+
+            bottom: 20px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            z-index: 20;
+
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 10px 15px;
+
+            border-radius: 15px;
+
+            background: rgba(30,30,30,.85);
+        }
+
+        #controles button {
+            width: 42px;
+            height: 38px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #444;
+            color: white;
+
+            font-size: 18px;
+
+            cursor: pointer;
+        }
+
+        #controles button:hover {
+            background: #666;
+        }
+
+        #zoomTexto {
+            min-width: 55px;
+
+            text-align: center;
+
+            font-size: 14px;
+        }
+
+
+        /* =========================
+           MÓVIL
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            #cajaPassword {
+                padding: 25px;
+            }
+
+            .elemento {
+                padding: 12px;
+            }
+
+            .flecha {
+                width: 42px;
+                height: 65px;
+
+                font-size: 32px;
+            }
+
+            #anterior {
+                left: 8px;
+            }
+
+            #siguiente {
+                right: 8px;
+            }
+
+            #controles {
+                bottom: 10px;
+                padding: 7px 10px;
+            }
+
+            #controles button {
+                width: 36px;
+                height: 34px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+<!-- =====================================================
+     CONTRASEÑA
+===================================================== -->
+
+<div id="pantallaPassword">
+
+    <div id="cajaPassword">
+
+        <h1>🔒 Galería privada</h1>
+
+        <p>
+            Introduce la contraseña para acceder.
+        </p>
+
+        <input
+            type="password"
+            id="passwordInput"
+            placeholder="Contraseña"
+            autocomplete="off">
+
+        <button
+            id="botonEntrar"
+            onclick="comprobarPassword()">
+
+            Entrar
+
+        </button>
+
+        <div id="errorPassword"></div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     CONTENIDO
+===================================================== -->
+
+<div id="contenido">
+
+
+    <!-- =========================
+         MENÚ
+    ========================= -->
+
+    <div id="menu">
+
+        <button
+            id="btnFotos"
+            class="activo"
+            onclick="mostrarSeccion('fotos')">
+
+            📸 Fotos
+
+        </button>
+
+        <button
+            id="btnVideos"
+            onclick="mostrarSeccion('videos')">
+
+            🎬 Vídeos
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================
+         FOTOS
+    ========================= -->
+
+    <section
+        id="fotos"
+        class="seccion activa">
+
+
+        <!--
+            Las imágenes conservan automáticamente
+            su proporción original.
+
+            Ejemplos:
+
+            500 × 500
+            321 × 432
+            1920 × 1080
+            800 × 1200
+
+            No tienes que escribir las dimensiones.
+        -->
+
+
+        <div class="elemento">
+
+            <img
+                class="imagen"
+                src="img1.jpg"
+                alt="Imagen 1"
+                data-src="img1.jpg">
+
+            <div class="informacion">
+                Imagen 1
+            </div>
+
+            <button
+                class="boton-descarga"
+                onclick="descargarArchivo('img1.jpg')">
+
+                ⬇ Descargar
+
+            </button>
+
+        </div>
+
+
+        <div class="elemento">
+
+            <img
+                class="imagen"
+                src="img2.jpg"
+                alt="Imagen 2"
+                data-src="img2.jpg">
+
+            <div class="informacion">
+                Imagen 2
+            </div>
+
+            <button
+                class="boton-descarga"
+                onclick="descargarArchivo('img2.jpg')">
+
+                ⬇ Descargar
+
+            </button>
+
+        </div>
+
+
+        <div class="elemento">
+
+            <img
+                class="imagen"
+                src="img3.jpg"
+                alt="Imagen 3"
+                data-src="img3.jpg">
+
+            <div class="informacion">
+                Imagen 3
+            </div>
+
+            <button
+                class="boton-descarga"
+                onclick="descargarArchivo('img3.jpg')">
+
+                ⬇ Descargar
+
+            </button>
+
+        </div>
+
+
+        <div class="elemento">
+
+            <img
+                class="imagen"
+                src="img4.jpg"
+                alt="Imagen 4"
+                data-src="img4.jpg">
+
+            <div class="informacion">
+                Imagen 4
+            </div>
+
+            <button
+                class="boton-descarga"
+                onclick="descargarArchivo('img4.jpg')">
+
+                ⬇ Descargar
+
+            </button>
+
+        </div>
+
+
+        <div class="elemento">
+
+            <img
+                class="imagen"
+                src="img5.jpg"
+                alt="Imagen 5"
+                data-src="img5.jpg">
+
+            <div class="informacion">
+                Imagen 5
+            </div>
+
+            <button
+                class="boton-descarga"
+                onclick="descargarArchivo('img5.jpg')">
+
+                ⬇ Descargar
+
+            </button>
+
+        </div>
+
+
+        <!-- FOTOS 6-30 -->
+
+        <script>
+
+            for (let i = 6; i <= 30; i++) {
+
+                document.write(`
+
+                    <div class="elemento">
+
+                        <img
+                            class="imagen"
+                            src="img${i}.jpg"
+                            alt="Imagen ${i}"
+                            data-src="img${i}.jpg">
+
+                        <div class="informacion">
+                            Imagen ${i}
+                        </div>
+
+                        <button
+                            class="boton-descarga"
+                            onclick="descargarArchivo('img${i}.jpg')">
+
+                            ⬇ Descargar
+
+                        </button>
+
+                    </div>
+
+                `);
+
+            }
+
+        </script>
+
+    </section>
+
+
+    <!-- =========================
+         VÍDEOS MP4
+    ========================= -->
+
+    <section
+        id="videos"
+        class="seccion">
+
+
+        <script>
+
+            /*
+             * SOLO MP4
+             *
+             * Puedes cambiar los nombres.
+             */
+
+            const videos = [
+
+                "video1.mp4",
+                "video2.mp4",
+                "video3.mp4",
+                "video4.mp4",
+                "video5.mp4",
+                "video6.mp4",
+                "video7.mp4",
+                "video8.mp4",
+                "video9.mp4",
+                "video10.mp4",
+                "video11.mp4",
+                "video12.mp4",
+                "video13.mp4",
+                "video14.mp4",
+                "video15.mp4",
+                "video16.mp4",
+                "video17.mp4",
+                "video18.mp4",
+                "video19.mp4",
+                "video20.mp4",
+                "video21.mp4",
+                "video22.mp4",
+                "video23.mp4",
+                "video24.mp4",
+                "video25.mp4",
+                "video26.mp4",
+                "video27.mp4",
+                "video28.mp4",
+                "video29.mp4",
+                "video30.mp4"
+
+            ];
+
+
+            for (let i = 0; i < videos.length; i++) {
+
+                const archivo = videos[i];
+
+                document.write(`
+
+                    <div class="elemento">
+
+                        <video
+                            controls
+                            preload="metadata">
+
+                            <source
+                                src="${archivo}"
+                                type="video/mp4">
+
+                            Tu navegador no puede
+                            reproducir este vídeo.
+
+                        </video>
+
+                        <div class="informacion">
+                            Vídeo ${i + 1}
+                        </div>
+
+                        <button
+                            class="boton-descarga"
+                            onclick="descargarArchivo('${archivo}')">
+
+                            ⬇ Descargar
+
+                        </button>
+
+                    </div>
+
+                `);
+
+            }
+
+        </script>
+
+    </section>
+
+</div>
+
+
+<!-- =====================================================
+     VISOR
+===================================================== -->
+
+<div id="visor">
+
+    <button
+        id="cerrar"
+        onclick="cerrarVisor()">
+
+        ×
+
+    </button>
+
+
+    <div id="contador">
+        1 / 30
+    </div>
+
+
+    <button
+        id="anterior"
+        class="flecha"
+        onclick="fotoAnterior()">
+
+        ‹
+
+    </button>
+
+
+    <img
+        id="imagenVisor"
+        src=""
+        alt="Imagen ampliada">
+
+
+    <button
+        id="siguiente"
+        class="flecha"
+        onclick="fotoSiguiente()">
+
+        ›
+
+    </button>
+
+
+    <div id="controles">
+
+        <button onclick="alejar()">
+            −
+        </button>
+
+        <span id="zoomTexto">
+            100%
+        </span>
+
+        <button onclick="acercar()">
+            +
+        </button>
+
+        <button onclick="restablecerZoom()">
+            1:1
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONTRASEÑA
+===================================================== */
+
+const CONTRASENA = "hola1234";
+
+
+function comprobarPassword() {
+
+    const input =
+        document.getElementById("passwordInput");
+
+    const error =
+        document.getElementById("errorPassword");
+
+    const pantalla =
+        document.getElementById("pantallaPassword");
+
+    const contenido =
+        document.getElementById("contenido");
+
+
+    if (input.value === CONTRASENA) {
+
+        pantalla.style.display = "none";
+
+        contenido.classList.add("visible");
+
+        error.textContent = "";
+
+    } else {
+
+        error.textContent =
+            "❌ Contraseña incorrecta.";
+
+        input.value = "";
+
+        input.focus();
+    }
+}
+
+
+document
+    .getElementById("passwordInput")
+    .addEventListener("keydown", function(e) {
+
+        if (e.key === "Enter") {
+            comprobarPassword();
+        }
+
+    });
+
+
+/* =====================================================
+   CAMBIO DE SECCIÓN
+===================================================== */
+
+function mostrarSeccion(seccion) {
+
+    document
+        .querySelectorAll(".seccion")
+        .forEach(s =>
+            s.classList.remove("activa")
+        );
+
+
+    document
+        .getElementById(seccion)
+        .classList.add("activa");
+
+
+    document
+        .getElementById("btnFotos")
+        .classList.remove("activo");
+
+    document
+        .getElementById("btnVideos")
+        .classList.remove("activo");
+
+
+    if (seccion === "fotos") {
+
+        document
+            .getElementById("btnFotos")
+            .classList.add("activo");
+
+    } else {
+
+        document
+            .getElementById("btnVideos")
+            .classList.add("activo");
+    }
+}
+
+
+/* =====================================================
+   DESCARGA
+===================================================== */
+
+function descargarArchivo(archivo) {
+
+    const enlace =
+        document.createElement("a");
+
+    enlace.href = archivo;
+
+    enlace.download =
+        archivo.split("/").pop();
+
+    document.body.appendChild(enlace);
+
+    enlace.click();
+
+    document.body.removeChild(enlace);
+}
+
+
+/* =====================================================
+   VISOR
+===================================================== */
+
+const visor =
+    document.getElementById("visor");
+
+const imagenVisor =
+    document.getElementById("imagenVisor");
+
+const zoomTexto =
+    document.getElementById("zoomTexto");
+
+const contador =
+    document.getElementById("contador");
+
+
+const imagenes =
+    Array.from(
+        document.querySelectorAll(".imagen")
+    );
+
+
+let indiceActual = 0;
+
+let zoom = 1;
+
+let posicionX = 0;
+let posicionY = 0;
+
+let arrastrando = false;
+
+let inicioX = 0;
+let inicioY = 0;
+
+let ultimoX = 0;
+let ultimoY = 0;
+
+let movimientoX = 0;
+
+let cambiandoFoto = false;
+
+
+/* =====================================================
+   TRANSFORMACIÓN
+===================================================== */
+
+function actualizarTransformacion() {
+
+    imagenVisor.style.transform =
+        `translate(${posicionX}px, ${posicionY}px)
+         scale(${zoom})`;
+
+    zoomTexto.textContent =
+        Math.round(zoom * 100) + "%";
+}
+
+
+/* =====================================================
+   ABRIR
+===================================================== */
+
+function abrirVisor(indice) {
+
+    indiceActual = indice;
+
+    zoom = 1;
+
+    posicionX = 0;
+    posicionY = 0;
+
+
+    imagenVisor.src =
+        imagenes[indiceActual].dataset.src ||
+        imagenes[indiceActual].src;
+
+
+    contador.textContent =
+        `${indiceActual + 1} / ${imagenes.length}`;
+
+
+    actualizarTransformacion();
+
+
+    visor.classList.add("activo");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+/* =====================================================
+   CERRAR
+===================================================== */
+
+function cerrarVisor() {
+
+    visor.classList.remove("activo");
+
+    document.body.style.overflow = "";
+
+    arrastrando = false;
+}
+
+
+/* =====================================================
+   CLICK EN FOTO
+===================================================== */
+
+imagenes.forEach((imagen, indice) => {
+
+    imagen.addEventListener("click", () => {
+
+        if (Math.abs(movimientoX) < 10) {
+
+            abrirVisor(indice);
+
+        }
+
+    });
+
+});
+
+
+/* =====================================================
+   CAMBIO DE FOTO
+===================================================== */
+
+function animarCambio(direccion) {
+
+    if (cambiandoFoto) return;
+
+    cambiandoFoto = true;
+
+    imagenVisor.classList.add("animando");
+
+
+    const salida =
+        direccion === 1
+            ? -window.innerWidth
+            : window.innerWidth;
+
+
+    imagenVisor.style.transform =
+        `translate(${salida}px, 0)
+         scale(${zoom})`;
+
+
+    setTimeout(() => {
+
+        indiceActual += direccion;
+
+
+        if (indiceActual >= imagenes.length) {
+            indiceActual = 0;
+        }
+
+
+        if (indiceActual < 0) {
+            indiceActual =
+                imagenes.length - 1;
+        }
+
+
+        imagenVisor.classList.remove("animando");
+
+
+        imagenVisor.src =
+            imagenes[indiceActual].dataset.src ||
+            imagenes[indiceActual].src;
+
+
+        contador.textContent =
+            `${indiceActual + 1} / ${imagenes.length}`;
+
+
+        const entrada =
+            direccion === 1
+                ? window.innerWidth
+                : -window.innerWidth;
+
+
+        imagenVisor.style.transform =
+            `translate(${entrada}px, 0)
+             scale(${zoom})`;
+
+
+        void imagenVisor.offsetWidth;
+
+
+        imagenVisor.classList.add("animando");
+
+
+        requestAnimationFrame(() => {
+
+            posicionX = 0;
+            posicionY = 0;
+
+            imagenVisor.style.transform =
+                `translate(0px, 0px)
+                 scale(${zoom})`;
+
+        });
+
+
+        setTimeout(() => {
+
+            imagenVisor.classList.remove("animando");
+
+            cambiandoFoto = false;
+
+        }, 300);
+
+    }, 300);
+}
+
+
+function fotoSiguiente() {
+
+    if (!cambiandoFoto) {
+        animarCambio(1);
+    }
+}
+
+
+function fotoAnterior() {
+
+    if (!cambiandoFoto) {
+        animarCambio(-1);
+    }
+}
+
+
+/* =====================================================
+   ARRASTRE
+===================================================== */
+
+imagenVisor.addEventListener(
+    "mousedown",
+    iniciarArrastre
+);
+
+
+function iniciarArrastre(e) {
+
+    if (e.button !== 0) return;
+
+    arrastrando = true;
+
+    movimientoX = 0;
+
+    inicioX = e.clientX;
+    inicioY = e.clientY;
+
+    ultimoX = e.clientX;
+    ultimoY = e.clientY;
+
+    imagenVisor.classList.add("arrastrando");
+
+    e.preventDefault();
+}
+
+
+document.addEventListener(
+    "mousemove",
+    moverArrastre
+);
+
+
+function moverArrastre(e) {
+
+    if (!arrastrando) return;
+
+
+    const dx =
+        e.clientX - ultimoX;
+
+    const dy =
+        e.clientY - ultimoY;
+
+
+    movimientoX =
+        e.clientX - inicioX;
+
+
+    if (zoom > 1) {
+
+        posicionX += dx;
+        posicionY += dy;
+
+        actualizarTransformacion();
+
+    } else {
+
+        posicionX =
+            movimientoX * 0.8;
+
+        posicionY =
+            (e.clientY - inicioY) * 0.05;
+
+        actualizarTransformacion();
+    }
+
+
+    ultimoX = e.clientX;
+    ultimoY = e.clientY;
+}
+
+
+document.addEventListener(
+    "mouseup",
+    terminarArrastre
+);
+
+
+function terminarArrastre() {
+
+    if (!arrastrando) return;
+
+    arrastrando = false;
+
+    imagenVisor.classList.remove("arrastrando");
+
+
+    if (zoom > 1) {
+        return;
+    }
+
+
+    const UMBRAL = 120;
+
+
+    if (movimientoX < -UMBRAL) {
+
+        fotoSiguiente();
+
+    }
+
+    else if (movimientoX > UMBRAL) {
+
+        fotoAnterior();
+
+    }
+
+    else {
+
+        imagenVisor.classList.add("animando");
+
+        posicionX = 0;
+        posicionY = 0;
+
+        actualizarTransformacion();
+
+
+        setTimeout(() => {
+
+            imagenVisor.classList.remove("animando");
+
+        }, 300);
+    }
+}
+
+
+/* =====================================================
+   ZOOM
+===================================================== */
+
+visor.addEventListener(
+    "wheel",
+    (e) => {
+
+        e.preventDefault();
+
+        if (e.deltaY < 0) {
+            acercar();
+        } else {
+            alejar();
+        }
+
+    },
+    { passive: false }
+);
+
+
+function acercar() {
+
+    zoom += 0.2;
+
+    if (zoom > 5) {
+        zoom = 5;
+    }
+
+    actualizarTransformacion();
+}
+
+
+function alejar() {
+
+    zoom -= 0.2;
+
+    if (zoom < 1) {
+        zoom = 1;
+    }
+
+
+    if (zoom === 1) {
+
+        posicionX = 0;
+        posicionY = 0;
+    }
+
+
+    actualizarTransformacion();
+}
+
+
+function restablecerZoom() {
+
+    zoom = 1;
+
+    posicionX = 0;
+    posicionY = 0;
+
+    actualizarTransformacion();
+}
+
+
+/* =====================================================
+   DOBLE CLICK
+===================================================== */
+
+imagenVisor.addEventListener(
+    "dblclick",
+    () => {
+
+        if (zoom === 1) {
+
+            zoom = 2;
+
+        } else {
+
+            zoom = 1;
+
+            posicionX = 0;
+            posicionY = 0;
+        }
+
+
+        actualizarTransformacion();
+    }
+);
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    (e) => {
+
+        if (!visor.classList.contains("activo")) {
+            return;
+        }
+
+
+        if (e.key === "Escape") {
+
+            cerrarVisor();
+
+        } else if (e.key === "ArrowRight") {
+
+            fotoSiguiente();
+
+        } else if (e.key === "ArrowLeft") {
+
+            fotoAnterior();
+
+        } else if (e.key === "+") {
+
+            acercar();
+
+        } else if (e.key === "-") {
+
+            alejar();
+
+        } else if (e.key === "0") {
+
+            restablecerZoom();
+        }
+
+    }
+);
+
+
+/* =====================================================
+   SWIPE MÓVIL
+===================================================== */
+
+let toqueInicioX = 0;
+
+
+visor.addEventListener(
+    "touchstart",
+    (e) => {
+
+        if (e.touches.length !== 1) return;
+
+        toqueInicioX =
+            e.touches[0].clientX;
+
+    },
+    { passive: true }
+);
+
+
+visor.addEventListener(
+    "touchend",
+    (e) => {
+
+        if (e.changedTouches.length !== 1) {
+            return;
+        }
+
+
+        if (zoom > 1) {
+            return;
+        }
+
+
+        const finalX =
+            e.changedTouches[0].clientX;
+
+
+        const desplazamiento =
+            finalX - toqueInicioX;
+
+
+        const UMBRAL = 100;
+
+
+        if (desplazamiento < -UMBRAL) {
+
+            fotoSiguiente();
+
+        } else if (desplazamiento > UMBRAL) {
+
+            fotoAnterior();
+        }
+
+    },
+    { passive: true }
+);
+
+
+/* =====================================================
+   EVITAR ARRASTRE NATIVO
+===================================================== */
+
+imagenVisor.addEventListener(
+    "dragstart",
+    e => e.preventDefault()
+);
+
+</script>
+
+</body>
+</html>
+
